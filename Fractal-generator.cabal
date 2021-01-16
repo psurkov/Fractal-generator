@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3d3a4bd052b5ed206a1f19ce3fe017244a6d3cc7468ff2f0ed9cee9a3501b524
+-- hash: 3dce8a9738cf8d372868470421526fbe9becbfd17e5e510cdbae62475169035f
 
 name:           Fractal-generator
 version:        0.1.0.0
@@ -34,8 +34,8 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , bytestring >=0.10.10.1
     , gloss >=1.13.2.1
-    , bytestring >= 0.10.10.1
   default-language: Haskell2010
 
 executable Fractal-generator-exe
@@ -48,6 +48,7 @@ executable Fractal-generator-exe
   build-depends:
       Fractal-generator
     , base >=4.7 && <5
+    , bytestring >=0.10.10.1
     , gloss >=1.13.2.1
   default-language: Haskell2010
 
@@ -62,5 +63,6 @@ test-suite Fractal-generator-test
   build-depends:
       Fractal-generator
     , base >=4.7 && <5
+    , bytestring >=0.10.10.1
     , gloss >=1.13.2.1
   default-language: Haskell2010
