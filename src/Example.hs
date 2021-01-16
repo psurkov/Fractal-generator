@@ -14,10 +14,10 @@ import Data.Semigroup
 
 import Debug.Trace
 
-width :: Integer
+width :: Int
 width = 400
 
-height :: Integer
+height :: Int
 height = 400
 
 window :: Display
@@ -42,18 +42,23 @@ mandelbrotIterFunc :: IterFunc
 mandelbrotIterFunc = IterFunc $ \z c -> z*z + c
 
 makeComplexGrid :: Int -> Int -> Complex Float -> Complex Float -> [Complex Float]
-makeComplexGrid w h lb ur = do
-    imag <- make1DComplexGrid h (imagPart lb) (imagPart ur)
-    real <- make1DComplexGrid w (realPart lb) (realPart ur)
+makeComplexGrid w h bl ur = do
+    imag <- make1DComplexGrid h (imagPart bl) (imagPart ur)
+    real <- make1DComplexGrid w (realPart bl) (realPart ur)
     return (real :+ imag)
-    where make1DComplexGrid n l r = (+l) <$> (/ fromIntegral n) <$> (*(r - l)) <$> fromIntegral <$>[0..n - 1]
+    where make1DComplexGrid n l r = (+l) . (/ fromIntegral n) . (*(r - l)) . fromIntegral <$> [0..n - 1]
 
+blWorldByWidthHeight :: (Int, Int) -> Point
+blWorldByWidthHeight (w, h) = (-fromIntegral w/2.0, -fromIntegral h/2.0)
+
+urWorldByWidthHeight :: (Int, Int) -> Point
+urWorldByWidthHeight (w, h) = (fromIntegral w/2.0, fromIntegral h/2.0)
 
 blWorldInit :: Point
-blWorldInit = (-fromIntegral width/2.0, -fromIntegral height/2.0)
+blWorldInit = blWorldByWidthHeight (width, height)
 
 urWorldInit :: Point
-urWorldInit = (fromIntegral width/2.0, fromIntegral height/2.0)
+urWorldInit = urWorldByWidthHeight (width, height)
 
 blComplexInit :: Complex Float
 blComplexInit = (-1) :+ (-1)
@@ -86,36 +91,54 @@ fractal n bl ur w h = B.pack $ (concat)
 
 traces a = trace (show a) a
 
-drawing :: Float -> Complex Float -> Complex Float -> Picture
-drawing res bl ur = finalPic
+drawing :: Float -> (Complex Float, Complex Float) -> (Int, Int) -> Picture
+drawing res (bl, ur) (width, height) = finalPic
                     where resW = floor $ fromIntegral width / res
                           resH = floor $ fromIntegral height / res
                           frac = fractal 40 bl ur resW resH
                           resPic = bitmapOfByteString (fromIntegral resW) (fromIntegral resH) bitmapFormat frac False
                           finalPic = scale res res resPic
 
-data World = World { pic :: Picture, bl :: Complex Float, ur :: Complex Float, worldViewState :: ViewState }
+data World = World { worldPic :: Picture, 
+                     worldViewState :: ViewState,
+                     c_blur :: (Complex Float, Complex Float),
+                     worldScreenSize :: (Int, Int)
+                   }
 
+-- bl :: World -> Complex Float
+-- bl = fst . blur
+-- 
+-- ur :: World -> Complex Float
+-- ur = snd . blur
 
 updatedViewStateInit = viewStateInitWithConfig config
                        where config = defaultCommandConfig
 
 resolution :: Float
-resolution = 2
+resolution = 8
 
 initWorld :: World
-initWorld = World (drawing resolution blComplexInit urComplexInit) blComplexInit urComplexInit updatedViewStateInit
+initWorld = World (drawing resolution (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)) updatedViewStateInit (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)
 
 
 
 -- drawing2 bl ur = Pictures [drawing bl ur, circle 100, bitmapOfByteString 10 10 bitmapFormat (B.pack $ concatMap (const [0,0,100,255]) $ replicate 100 True) False]
 
 updateWorld :: Event -> World -> World
-updateWorld e w = World (drawing resolution bl ur) bl ur st'
-                  where st' = fromMaybe (worldViewState w) (updateViewStateWithEventMaybe e (worldViewState w))
-                        vp = viewStateViewPort st'
-                        bl = traces $ convertWorldToComplex $ invertViewPort vp (-fromIntegral width/2, -fromIntegral height/2)
-                        ur = traces $ convertWorldToComplex $ invertViewPort vp (fromIntegral width/2, fromIntegral height/2)
+updateWorld event@(EventResize worldScreenSize') (World pic worldViewState c_blur _) = updateWorldViewState event world'
+        where world' = World pic worldViewState c_blur worldScreenSize'
+updateWorld event world = updateWorldViewState event world        
+
+updateWorldViewState :: Event -> World -> World
+updateWorldViewState e world = World (drawing resolution (bl, ur) (worldScreenSize world)) st' (bl, ur) (worldScreenSize world)
+                               where st' = fromMaybe (worldViewState world) (updateViewStateWithEventMaybe e (worldViewState world))
+                                     vp = viewStateViewPort st'
+                                     w_bl = blWorldByWidthHeight $ worldScreenSize world
+                                     w_ur = urWorldByWidthHeight $ worldScreenSize world
+                                     bl = traces $ convertWorldToComplex $ invertViewPort vp w_bl
+                                     ur = traces $ convertWorldToComplex $ invertViewPort vp w_ur
+
+
 
 
 
@@ -128,5 +151,5 @@ updateWorld e w = World (drawing resolution bl ur) bl ur st'
 
 someFunc :: IO ()
 -- someFunc = display window background drawing
-someFunc = play window background 60 initWorld pic updateWorld (\t w -> w) --updateWorld
+someFunc = play window background 60 initWorld worldPic updateWorld (\t w -> w) --updateWorld
 -- (\vp t w -> trace (show $ convertWorldToComplex $ traces $ invertViewPort vp (100, 100)) w)
