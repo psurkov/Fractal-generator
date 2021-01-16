@@ -102,7 +102,9 @@ drawing res (bl, ur) (width, height) = finalPic
 data World = World { worldPic :: Picture, 
                      worldViewState :: ViewState,
                      c_blur :: (Complex Float, Complex Float),
-                     worldScreenSize :: (Int, Int)
+                     worldScreenSize :: (Int, Int),
+                     worldResolution :: Float,
+                     lastResolutionUpdateTime :: Float
                    }
 
 -- bl :: World -> Complex Float
@@ -114,25 +116,26 @@ data World = World { worldPic :: Picture,
 updatedViewStateInit = viewStateInitWithConfig config
                        where config = defaultCommandConfig
 
-resolution :: Float
-resolution = 8
+initResolution :: Float
+initResolution = 4
 
 initWorld :: World
-initWorld = World (drawing resolution (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)) updatedViewStateInit (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)
+initWorld = World (drawing initResolution (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)) updatedViewStateInit (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height) initResolution 0
 
 
 
 -- drawing2 bl ur = Pictures [drawing bl ur, circle 100, bitmapOfByteString 10 10 bitmapFormat (B.pack $ concatMap (const [0,0,100,255]) $ replicate 100 True) False]
 
 updateWorld :: Event -> World -> World
-updateWorld event@(EventResize worldScreenSize') (World pic worldViewState c_blur _) = updateWorldViewState event world'
-        where world' = World pic worldViewState c_blur worldScreenSize'
-updateWorld event world = updateWorldViewState event world        
+updateWorld event@(EventResize worldScreenSize') (World pic worldViewState c_blur _ worldResolution lastResolutionUpdateTime) = updateWorldViewState event world'
+        where world' = World pic worldViewState c_blur worldScreenSize' worldResolution lastResolutionUpdateTime
+updateWorld event world = updateWorldViewState event world
 
 updateWorldViewState :: Event -> World -> World
-updateWorldViewState e world = World (drawing resolution (bl, ur) (worldScreenSize world)) st' (bl, ur) (worldScreenSize world)
+updateWorldViewState e world = World (drawing res' (bl, ur) (worldScreenSize world)) st' (bl, ur) (worldScreenSize world) res' (lastResolutionUpdateTime world)
                                where st' = fromMaybe (worldViewState world) (updateViewStateWithEventMaybe e (worldViewState world))
                                      vp = viewStateViewPort st'
+                                     res' = if isJust (updateViewStateWithEventMaybe e (worldViewState world)) then initResolution else worldResolution world
                                      w_bl = blWorldByWidthHeight $ worldScreenSize world
                                      w_ur = urWorldByWidthHeight $ worldScreenSize world
                                      bl = traces $ convertWorldToComplex $ invertViewPort vp w_bl
@@ -140,7 +143,15 @@ updateWorldViewState e world = World (drawing resolution (bl, ur) (worldScreenSi
 
 
 
+timeToMaxResolution :: Float
+timeToMaxResolution = 20
 
+maxResolution :: Float
+maxResolution = 1
+
+updateTime :: Float -> World -> World
+updateTime t (World pic st blur size res _) = World pic st blur size res' t
+                                              where res' = traces $ max maxResolution $ res - t * (initResolution - maxResolution)
 
 -- reverseUpdateViewPort :: ViewPort -> Picture -> Picture
 -- reverseUpdateViewPort (ViewPort (dx, dy) sc rot) pic = -- pic
@@ -151,5 +162,5 @@ updateWorldViewState e world = World (drawing resolution (bl, ur) (worldScreenSi
 
 someFunc :: IO ()
 -- someFunc = display window background drawing
-someFunc = play window background 60 initWorld worldPic updateWorld (\t w -> w) --updateWorld
+someFunc = play window background 24 initWorld worldPic updateWorld updateTime --updateWorld
 -- (\vp t w -> trace (show $ convertWorldToComplex $ traces $ invertViewPort vp (100, 100)) w)
