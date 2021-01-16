@@ -1,6 +1,6 @@
 module Main where
 
-import Example
+import View
 
 main :: IO ()
-main = someFunc
+main = viewMain
