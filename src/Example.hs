@@ -15,10 +15,10 @@ import Data.Semigroup
 import Debug.Trace
 
 width :: Integer
-width = 800
+width = 400
 
 height :: Integer
-height = 800
+height = 400
 
 window :: Display
 window = InWindow "Nice Mandelbort Window" (fromIntegral width, fromIntegral height) (10, 10)
@@ -41,23 +41,13 @@ check c = magnitude c <= 2
 mandelbrotIterFunc :: IterFunc 
 mandelbrotIterFunc = IterFunc $ \z c -> z*z + c
 
--- direction? bruh, traverse go brrr
-makeComplexGrid :: Integer -> Integer -> Complex Float -> Complex Float -> [Complex Float]
-makeComplexGrid _ 0 _  _  = []
-makeComplexGrid 0 _ _  _  = []
-makeComplexGrid w h lb ur = concat $ makeComplexGrid' w h lb ur ((realPart ur - realPart lb)/fromIntegral w :+ 0) (0 :+ (imagPart ur - imagPart lb)/fromIntegral h)
+makeComplexGrid :: Int -> Int -> Complex Float -> Complex Float -> [Complex Float]
+makeComplexGrid w h lb ur = do
+    imag <- make1DComplexGrid h (imagPart lb) (imagPart ur)
+    real <- make1DComplexGrid w (realPart lb) (realPart ur)
+    return (real :+ imag)
+    where make1DComplexGrid n l r = (+l) <$> (/ fromIntegral n) <$> (*(r - l)) <$> fromIntegral <$>[0..n - 1]
 
-makeComplexGrid' _ 0 _ _ _ _ = []
-makeComplexGrid' w h lb ur wstep hstep = make1DComplexGrid lb w wstep : makeComplexGrid' w (h-1) (lb + hstep) ur wstep hstep
-make1DComplexGrid _ 0   _    = []
-make1DComplexGrid c len step = c : make1DComplexGrid (c + step) (len - 1) step
--- makeComplexGrid :: Int -> Int -> Complex Float -> Complex Float -> [Complex Float]
--- makeComplexGrid w h lb ur = do
---     real <- make1DComplexGrid w (realPart lb) (realPart ur)
---     imag <- make1DComplexGrid h (imagPart lb) (imagPart ur)
---     return (real :+ imag)
--- make1DComplexGrid 0 _ _ = []
--- make1DComplexGrid n l r = [l, (r - l) / fromIntegral n..r]
 
 blWorldInit :: Point
 blWorldInit = (-fromIntegral width/2.0, -fromIntegral height/2.0)
@@ -97,7 +87,6 @@ fractal n bl ur w h = B.pack $ (concat)
 traces a = trace (show a) a
 
 drawing :: Float -> Complex Float -> Complex Float -> Picture
--- drawing = bitmapOfByteString width height bitmapFormat (B.pack $ concat $ replicate (width * height) [0,100,0,255]) False
 drawing res bl ur = finalPic
                     where resW = floor $ fromIntegral width / res
                           resH = floor $ fromIntegral height / res
