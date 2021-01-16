@@ -6,6 +6,7 @@ import Graphics.Gloss
 import Data.Word
 import Data.Complex
 import qualified Data.ByteString as B
+import Data.Semigroup
 
 width :: Int
 width = 800
@@ -22,42 +23,44 @@ background = white
 bitmapFormat :: BitmapFormat
 bitmapFormat = BitmapFormat TopToBottom PxRGBA
 
-type Iter = Complex Float -> Complex Float -> Complex Float
+newtype IterFunc = IterFunc {getFunc :: Complex Float -> Complex Float -> Complex Float}
 type Checker = Complex Float -> Bool
 
-iter :: Iter
-iter z c = z*z + c
-
-absC :: Complex Float -> Float
-absC (re :+ im) = sqrt $ re*re + im*im
+instance Semigroup IterFunc where
+    (IterFunc f) <> (IterFunc g) = IterFunc $ \z c -> f (g z c) c
 
 check :: Checker
-check c = absC c <= 2
+check c = magnitude c <= 2
 
-repeatIterN :: Iter -> Checker -> Integer -> Complex Float -> Complex Float -> Bool
-repeatIterN _ _  n _ _ | n < 0 = error "Negative number of iterations"
-repeatIterN _ ch 0 z _ = ch z
-repeatIterN f ch n z c = repeatIterN f ch (n - 1) (f z c) c
+mandelbrotIterFunc :: IterFunc 
+mandelbrotIterFunc = IterFunc $ \z c -> z*z + c
 
 -- direction? bruh, traverse go brrr
-makeComplexGrid :: Int -> Int -> Complex Float -> Complex Float -> [[Complex Float]]
+makeComplexGrid :: Int -> Int -> Complex Float -> Complex Float -> [Complex Float]
 makeComplexGrid _ 0 _  _  = []
 makeComplexGrid 0 _ _  _  = []
-makeComplexGrid w h lb ur = makeComplexGrid' w h lb ur ((realPart ur - realPart lb)/fromIntegral w :+ 0) (0 :+ (imagPart ur - imagPart lb)/fromIntegral h)
+makeComplexGrid w h lb ur = concat $ makeComplexGrid' w h lb ur ((realPart ur - realPart lb)/fromIntegral w :+ 0) (0 :+ (imagPart ur - imagPart lb)/fromIntegral h)
 
 makeComplexGrid' _ 0 _ _ _ _ = []
 makeComplexGrid' w h lb ur wstep hstep = make1DComplexGrid lb w wstep : makeComplexGrid' w (h-1) (lb + hstep) ur wstep hstep
 make1DComplexGrid _ 0   _    = []
 make1DComplexGrid c len step = c : make1DComplexGrid (c + step) (len - 1) step
+-- makeComplexGrid :: Int -> Int -> Complex Float -> Complex Float -> [Complex Float]
+-- makeComplexGrid w h lb ur = do
+--     real <- make1DComplexGrid w (realPart lb) (realPart ur)
+--     imag <- make1DComplexGrid h (imagPart lb) (imagPart ur)
+--     return (real :+ imag)
+-- make1DComplexGrid 0 _ _ = []
+-- make1DComplexGrid n l r = [l, (r - l) / fromIntegral n..r]
 
 makeColors :: Bool -> [Word8]
 makeColors False = [100,0,0,255]
 makeColors True  = [0,100,0,255]
 
 fractal :: Integer -> B.ByteString
-fractal n = B.pack $ (concat . concat) 
-                   $ (fmap . fmap) 
-                     (makeColors . repeatIterN iter check n 0)
+fractal n = B.pack $ (concat) 
+                   $ (fmap) 
+                     (makeColors . check . getFunc (stimes n mandelbrotIterFunc) 0)
                      (makeComplexGrid width height ((-2) :+ (-1)) (1 :+ 1))
 
 drawing :: Picture
