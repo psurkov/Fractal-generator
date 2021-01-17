@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 064980aa55a044aad0bac5582e1fb7194c179d0b48bc175a59846ab0178b5117
+-- hash: 193d0baa615ba09f216dfec8a37d54df051cec2f8195d896e052b8cadb4c8707
 
 name:           Fractal-generator
 version:        0.1.0.0
@@ -28,7 +28,6 @@ source-repository head
 library
   exposed-modules:
       Divergence
-      Example
       Fractal
       FractalColor
       Geometry
