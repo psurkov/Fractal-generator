@@ -61,18 +61,18 @@ initWorld = World (drawing mandelbrotFractal resolution (blComplexInit, urComple
 -- drawing2 bl ur = Pictures [drawing bl ur, circle 100, bitmapOfByteString 10 10 bitmapFormat (B.pack $ concatMap (const [0,0,100,255]) $ replicate 100 True) False]
 
 updateWorld :: Event -> World -> World
-updateWorld event@(EventResize worldScreenSize') (World pic worldViewState c_blur _) = updateWorldViewState event world'
-        where world' = World pic worldViewState c_blur worldScreenSize'
+updateWorld event@(EventResize worldScreenSize') w = w { worldScreenSize = worldScreenSize'}
 updateWorld event world = updateWorldViewState event world        
 
 updateWorldViewState :: Event -> World -> World
-updateWorldViewState e world = World (drawing mandelbrotFractal resolution (bl, ur) (worldScreenSize world)) st' (bl, ur) (worldScreenSize world)
+updateWorldViewState e world = world { worldPic = pic', worldViewState = st' }
                                where st' = fromMaybe (worldViewState world) (updateViewStateWithEventMaybe e (worldViewState world))
                                      vp = viewStateViewPort st'
                                      w_bl = blWorldByWidthHeight $ worldScreenSize world
                                      w_ur = urWorldByWidthHeight $ worldScreenSize world
                                      bl = traces $ convertWorldToComplex $ invertViewPort vp w_bl
                                      ur = traces $ convertWorldToComplex $ invertViewPort vp w_ur
+                                     pic' = drawing mandelbrotFractal resolution (bl, ur) (worldScreenSize world)
 
 
 
