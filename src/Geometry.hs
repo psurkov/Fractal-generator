@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Geometry where
 
 import Graphics.Gloss
@@ -46,9 +48,10 @@ convertWorldToComplex (x, y) = xComplex C.:+ yComplex
                                       yComplex = yRel P.* C.imagPart urComplexInit
 
 makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> Acc (A.Vector FractalPoint)
-makeComplexGrid w h bl ur = use $ A.fromList (Z:.w P.* h) $ do
-    imag <- make1DComplexGrid h (C.imagPart bl) (C.imagPart ur)
-    real <- make1DComplexGrid w (C.realPart bl) (C.realPart ur)
-    P.return (real :+ imag)
-        where 
-            make1DComplexGrid n l r = (P.+l) . (P./ P.fromIntegral n) . (P.*(r P.- l)) . P.fromIntegral P.<$> [0..n - 1]
+makeComplexGrid w h bl ur = flatten $ generate (I2 (constant w) (constant h)) helper
+    where
+        blx = constant $ C.realPart bl
+        bly = constant $ C.imagPart bl
+        urx = constant $ C.realPart ur
+        ury = constant $ C.imagPart ur
+        helper (I2 y x) = ((blx + (urx - blx) * (A.fromIntegral x :: Exp Float) / constant (P.fromIntegral w))) ::+ ((bly + (ury - bly) * (A.fromIntegral y :: Exp Float) / constant (P.fromIntegral h)))
