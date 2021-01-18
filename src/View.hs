@@ -51,7 +51,7 @@ updatedViewStateInit = viewStateInitWithConfig config
                        where config = defaultCommandConfig
 
 resolution :: Float
-resolution = 2
+resolution = 1
 
 initWorld :: World
 initWorld = World (drawing mandelbrotFractal resolution (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)) updatedViewStateInit (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)
