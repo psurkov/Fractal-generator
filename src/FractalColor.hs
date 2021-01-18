@@ -11,9 +11,9 @@ twoColors :: ColorFunc
 twoColors _ (-1) = [100, 0, 0, 255]
 twoColors _ _  = [0, 100, 0, 255]
 
-gradientColor :: ColorFunc
-gradientColor _ (-1) = [0, 0, 0, 255]
-gradientColor iters x = gradient 0 iters [0, 0, 0, 255] [255, 255, 255, 255] x
+redGradientColor :: ColorFunc
+redGradientColor _ (-1) = [0, 0, 0, 255]
+redGradientColor iters x = gradient 0 iters [0, 0, 0, 255] [200, 100, 100, 255] x
 
 gradient :: Int -> Int -> FractalColor -> FractalColor -> Int -> FractalColor
 gradient l r a b x = zipWith (+) a $ fmap (\t -> fromIntegral $ round $ fromIntegral (fromIntegral t * x) / (fromIntegral (r-l))) $ zipWith (-) b a
