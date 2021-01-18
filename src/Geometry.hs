@@ -1,9 +1,14 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Geometry where
 
-import Data.Complex
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.ViewState
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.Data.Complex as A
+import qualified Prelude as P
+import qualified Data.Complex as C
 
 type FractalPoint = Complex Float
 
@@ -18,10 +23,10 @@ height = 400
 
 
 blWorldByWidthHeight :: (Int, Int) -> Point
-blWorldByWidthHeight (w, h) = (-fromIntegral w/2.0, -fromIntegral h/2.0)
+blWorldByWidthHeight (w, h) = (-P.fromIntegral w P./ 2.0, -P.fromIntegral h P./ 2.0)
 
 urWorldByWidthHeight :: (Int, Int) -> Point
-urWorldByWidthHeight (w, h) = (fromIntegral w/2.0, fromIntegral h/2.0)
+urWorldByWidthHeight (w, h) = (P.fromIntegral w P./ 2.0, P.fromIntegral h P./ 2.0)
 
 blWorldInit :: Point
 blWorldInit = blWorldByWidthHeight (width, height)
@@ -36,16 +41,17 @@ urComplexInit :: FractalPoint
 urComplexInit = (1) :+ (1)
 
 convertWorldToComplex :: Point -> FractalPoint
-convertWorldToComplex (x, y) = xComplex :+ yComplex
-                                where xRel = x / fst urWorldInit
-                                      yRel = y / snd urWorldInit
-                                      xComplex = xRel * realPart urComplexInit 
-                                      yComplex = yRel * imagPart urComplexInit
+convertWorldToComplex (x, y) = xComplex C.:+ yComplex
+                                where xRel = x P./ P.fst urWorldInit
+                                      yRel = y P./ P.snd urWorldInit
+                                      xComplex = xRel P.* C.realPart urComplexInit 
+                                      yComplex = yRel P.* C.imagPart urComplexInit
 
-makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> [FractalPoint]
-makeComplexGrid w h bl ur = do
-    imag <- make1DComplexGrid h (imagPart bl) (imagPart ur)
-    real <- make1DComplexGrid w (realPart bl) (realPart ur)
-    return (real :+ imag)
-        where 
-            make1DComplexGrid n l r = (+l) . (/ fromIntegral n) . (*(r - l)) . fromIntegral <$> [0..n - 1]
+makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> Acc (A.Vector FractalPoint)
+makeComplexGrid w h bl ur = flatten $ generate (I2 (constant w) (constant h)) helper
+    where
+        blx = constant $ C.realPart bl
+        bly = constant $ C.imagPart bl
+        urx = constant $ C.realPart ur
+        ury = constant $ C.imagPart ur
+        helper (I2 y x) = ((blx + (urx - blx) * (A.fromIntegral x :: Exp Float) / constant (P.fromIntegral w))) ::+ ((bly + (ury - bly) * (A.fromIntegral y :: Exp Float) / constant (P.fromIntegral h)))

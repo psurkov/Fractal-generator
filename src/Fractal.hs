@@ -1,17 +1,22 @@
 module Fractal where
 
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.Data.Complex as A
+import Data.Array.Accelerate.Data.Colour.RGB as A
+import qualified Prelude as P
+
 import Geometry
-import FractalColor
+import FractalColour
 import Divergence
 
-data Fractal = Fractal Int IterFunc Checker ColorFunc
+data Fractal = Fractal (Exp Int) IterFunc Checker ColourFunc
 
-fractalColorInPoint :: Fractal -> FractalPoint -> FractalColor
-fractalColorInPoint (Fractal iters f c cf) point = colorDivergence cf iters $ 
+fractalColourInPoint :: Fractal -> Exp FractalPoint -> Exp A.Colour
+fractalColourInPoint (Fractal iters f c cf) point = colorDivergence cf iters $ 
                                                         (calcDivergenceInPoint iters f c) point
 
-fractalColorInPoints :: Fractal -> [FractalPoint] -> [FractalColor]
-fractalColorInPoints f = fmap (fractalColorInPoint f)
+fractalColourInPoints :: Fractal -> Acc (Vector FractalPoint) -> Acc (Vector A.Colour)
+fractalColourInPoints f points = A.map (fractalColourInPoint f) points
 
-fractalColorsOnGrid :: Fractal -> Int -> Int -> FractalPoint -> FractalPoint -> [FractalColor]
-fractalColorsOnGrid f w h bl ur = fractalColorInPoints f $ makeComplexGrid w h bl ur
+fractalColoursOnGrid :: Fractal -> Int -> Int -> FractalPoint -> FractalPoint -> Acc (Vector A.Colour)
+fractalColoursOnGrid f w h bl ur = fractalColourInPoints f $ makeComplexGrid w h bl ur
