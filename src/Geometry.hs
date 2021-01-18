@@ -7,6 +7,10 @@ import Graphics.Gloss.Data.ViewState
 
 type FractalPoint = Complex Float
 
+fractalPointAsList :: FractalPoint -> [Float]
+fractalPointAsList (re :+ im) = [re, im]
+    
+
 -- TODO: phantom types
 
 

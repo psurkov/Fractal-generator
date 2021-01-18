@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 193d0baa615ba09f216dfec8a37d54df051cec2f8195d896e052b8cadb4c8707
+-- hash: 068de037247626f3d9232effff3431c5b32d7f33197c4ceb4fee158973401aaa
 
 name:           Fractal-generator
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Fractal
       FractalColor
       Geometry
+      GridScale
       Mandelbrot
       View
   other-modules:
@@ -41,6 +42,7 @@ library
       base >=4.7 && <5
     , bytestring >=0.10.10.1
     , gloss >=1.13.2.1
+    , kdt >=0.2.4
   default-language: Haskell2010
 
 executable Fractal-generator-exe
@@ -55,6 +57,7 @@ executable Fractal-generator-exe
     , base >=4.7 && <5
     , bytestring >=0.10.10.1
     , gloss >=1.13.2.1
+    , kdt >=0.2.4
   default-language: Haskell2010
 
 test-suite Fractal-generator-test
@@ -70,4 +73,5 @@ test-suite Fractal-generator-test
     , base >=4.7 && <5
     , bytestring >=0.10.10.1
     , gloss >=1.13.2.1
+    , kdt >=0.2.4
   default-language: Haskell2010

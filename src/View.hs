@@ -6,16 +6,11 @@ import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.ViewState
 import Graphics.Gloss.Interface.Pure.Game
 
-import Debug.Trace
-
 import Geometry
 import FractalColor
 import Fractal
 
 import Mandelbrot
-
-
-traces a = trace (show a) a
 
 
 window :: Display
@@ -27,18 +22,22 @@ background = white
 bitmapFormat :: BitmapFormat
 bitmapFormat = BitmapFormat BottomToTop PxRGBA
 
-drawing :: Fractal -> Float -> (FractalPoint, FractalPoint) -> (Int, Int) -> Picture
-drawing fractal res (bl, ur) (width, height) = finalPic
+drawing :: Fractal -> Float -> (FractalPoint, FractalPoint) -> (Int, Int) -> [[(FractalPoint, FractalColor)]] -> (Picture, [(FractalPoint, FractalColor)])
+drawing fractal res (bl, ur) (width, height) prevGrids = (finalPic, fractalColoredGrid)
                     where resW = floor $ fromIntegral width / res
                           resH = floor $ fromIntegral height / res
-                          frac = packColorsToByteString $ fractalColorsOnGrid fractal resW resH bl ur 
+                          prevGrid = if null prevGrids then [] else head prevGrids
+                          fractalColoredGrid = fractalColorsOnGridKdt fractal resW resH bl ur prevGrid
+                          fractalColors = map snd fractalColoredGrid
+                          frac = packColorsToByteString fractalColors
                           resPic = bitmapOfByteString (fromIntegral resW) (fromIntegral resH) bitmapFormat frac False
                           finalPic = scale res res resPic
 
 data World = World { worldPic :: Picture, 
                      worldViewState :: ViewState,
                      c_blur :: (FractalPoint, FractalPoint),
-                     worldScreenSize :: (Int, Int)
+                     worldScreenSize :: (Int, Int),
+                     prevGrids :: [[(FractalPoint, FractalColor)]]
                    }
 
 -- bl :: World -> FractalPoint
@@ -54,7 +53,7 @@ resolution :: Float
 resolution = 8
 
 initWorld :: World
-initWorld = World (drawing mandelbrotFractal resolution (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)) updatedViewStateInit (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height)
+initWorld = World (fst $ drawing mandelbrotFractal resolution (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height) []) updatedViewStateInit (blComplexInit, urComplexInit) (fromIntegral width, fromIntegral height) []
 
 
 
@@ -65,14 +64,14 @@ updateWorld event@(EventResize worldScreenSize') w = w { worldScreenSize = world
 updateWorld event world = updateWorldViewState event world        
 
 updateWorldViewState :: Event -> World -> World
-updateWorldViewState e world = world { worldPic = pic', worldViewState = st' }
+updateWorldViewState e world = world { worldPic = pic', worldViewState = st', prevGrids = [newGrid]  }
                                where st' = fromMaybe (worldViewState world) (updateViewStateWithEventMaybe e (worldViewState world))
                                      vp = viewStateViewPort st'
                                      w_bl = blWorldByWidthHeight $ worldScreenSize world
                                      w_ur = urWorldByWidthHeight $ worldScreenSize world
-                                     bl = traces $ convertWorldToComplex $ invertViewPort vp w_bl
-                                     ur = traces $ convertWorldToComplex $ invertViewPort vp w_ur
-                                     pic' = drawing mandelbrotFractal resolution (bl, ur) (worldScreenSize world)
+                                     bl = convertWorldToComplex $ invertViewPort vp w_bl
+                                     ur = convertWorldToComplex $ invertViewPort vp w_ur
+                                     (pic', newGrid) = drawing mandelbrotFractal resolution (bl, ur) (worldScreenSize world) (prevGrids world)
 
 
 

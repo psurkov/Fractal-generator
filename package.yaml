@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - gloss >= 1.13.2.1
 - bytestring >= 0.10.10.1
+- kdt >= 0.2.4
 
 library:
   source-dirs: src
