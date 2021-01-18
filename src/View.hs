@@ -1,6 +1,8 @@
+{-# LANGUAGE StandaloneDeriving #-}
 module View where
 
 import Data.Maybe
+import Control.Monad
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.ViewState
@@ -65,14 +67,27 @@ updateWorld event@(EventResize worldScreenSize') (World pic worldViewState c_blu
         where world' = World pic worldViewState c_blur worldScreenSize'
 updateWorld event world = updateWorldViewState event world        
 
+-- debug:
+deriving instance Show ViewPort
+deriving instance Eq ViewPort
+deriving instance Eq ViewState
+deriving instance Show ViewState
+deriving instance Eq World
+--
+
 updateWorldViewState :: Event -> World -> World
-updateWorldViewState e world = World (drawing mandelbrotFractal resolution (bl, ur) (worldScreenSize world)) st' (bl, ur) (worldScreenSize world)
-                               where st' = fromMaybe (worldViewState world) (updateViewStateWithEventMaybe e (worldViewState world))
-                                     vp = viewStateViewPort st'
-                                     w_bl = blWorldByWidthHeight $ worldScreenSize world
-                                     w_ur = urWorldByWidthHeight $ worldScreenSize world
-                                     bl = traces $ convertWorldToComplex $ invertViewPort vp w_bl
-                                     ur = traces $ convertWorldToComplex $ invertViewPort vp w_ur
+updateWorldViewState e world = world'
+                               where maybeWorld' = do st' <- updateViewStateWithEventMaybe e (worldViewState world)
+                                                      let vp = trace (show e) viewStateViewPort st'
+--                                                      guard $ vp /= (viewStateViewPort . worldViewState) world
+                                                      let w_bl = traces $ blWorldByWidthHeight $ worldScreenSize world
+                                                      let w_ur = traces $ urWorldByWidthHeight $ worldScreenSize world
+                                                      let bl = traces $ convertWorldToComplex $ invertViewPort vp w_bl
+                                                      let ur = traces $ convertWorldToComplex $ invertViewPort vp w_ur
+                                                      let world' = trace (show $ vp == (viewStateViewPort . worldViewState) world) World (drawing mandelbrotFractal resolution (bl, ur) (worldScreenSize world)) st' (bl, ur) (worldScreenSize world)
+                                                      return $ trace (show $ worldPic world /= worldPic world') world'
+                                     world' = fromMaybe world maybeWorld'
+                                     
 
 
 
