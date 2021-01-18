@@ -9,7 +9,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import Debug.Trace
 
 import Geometry
-import FractalColor
+import FractalColour
 import Fractal
 
 import Mandelbrot
@@ -31,7 +31,7 @@ drawing :: Fractal -> Float -> (FractalPoint, FractalPoint) -> (Int, Int) -> Pic
 drawing fractal res (bl, ur) (width, height) = finalPic
                     where resW = floor $ fromIntegral width / res
                           resH = floor $ fromIntegral height / res
-                          frac = packColorsToByteString $ fractalColorsOnGrid fractal resW resH bl ur 
+                          frac = packColoursToByteString $ fractalColoursOnGrid fractal resW resH bl ur 
                           resPic = bitmapOfByteString (fromIntegral resW) (fromIntegral resH) bitmapFormat frac False
                           finalPic = scale res res resPic
 

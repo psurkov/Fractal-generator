@@ -1,9 +1,12 @@
 module Geometry where
 
-import Data.Complex
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.ViewState
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.Data.Complex as A
+import qualified Prelude as P
+import qualified Data.Complex as C
 
 type FractalPoint = Complex Float
 
@@ -18,10 +21,10 @@ height = 400
 
 
 blWorldByWidthHeight :: (Int, Int) -> Point
-blWorldByWidthHeight (w, h) = (-fromIntegral w/2.0, -fromIntegral h/2.0)
+blWorldByWidthHeight (w, h) = (-P.fromIntegral w/2.0, -P.fromIntegral h/2.0)
 
 urWorldByWidthHeight :: (Int, Int) -> Point
-urWorldByWidthHeight (w, h) = (fromIntegral w/2.0, fromIntegral h/2.0)
+urWorldByWidthHeight (w, h) = (P.fromIntegral w/2.0, P.fromIntegral h/2.0)
 
 blWorldInit :: Point
 blWorldInit = blWorldByWidthHeight (width, height)
@@ -36,16 +39,16 @@ urComplexInit :: FractalPoint
 urComplexInit = (1) :+ (1)
 
 convertWorldToComplex :: Point -> FractalPoint
-convertWorldToComplex (x, y) = xComplex :+ yComplex
-                                where xRel = x / fst urWorldInit
-                                      yRel = y / snd urWorldInit
-                                      xComplex = xRel * realPart urComplexInit 
-                                      yComplex = yRel * imagPart urComplexInit
+convertWorldToComplex (x, y) = xComplex C.:+ yComplex
+                                where xRel = x / P.fst urWorldInit
+                                      yRel = y / P.snd urWorldInit
+                                      xComplex = xRel * C.realPart urComplexInit 
+                                      yComplex = yRel * C.imagPart urComplexInit
 
-makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> [FractalPoint]
-makeComplexGrid w h bl ur = do
-    imag <- make1DComplexGrid h (imagPart bl) (imagPart ur)
-    real <- make1DComplexGrid w (realPart bl) (realPart ur)
-    return (real :+ imag)
+makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> Acc (A.Vector FractalPoint)
+makeComplexGrid w h bl ur = use $ A.fromList (Z:.w*h) $ do
+    imag <- make1DComplexGrid h (C.imagPart bl) (C.imagPart ur)
+    real <- make1DComplexGrid w (C.realPart bl) (C.realPart ur)
+    P.return (real :+ imag)
         where 
-            make1DComplexGrid n l r = (+l) . (/ fromIntegral n) . (*(r - l)) . fromIntegral <$> [0..n - 1]
+            make1DComplexGrid n l r = (+l) . (/ P.fromIntegral n) . (*(r - l)) . P.fromIntegral P.<$> [0..n - 1]

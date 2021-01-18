@@ -1,20 +1,25 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns #-}
+
 module Divergence where
 
-import Data.Complex
+
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.Data.Complex as A
+import qualified Prelude as P
+
 import Geometry
 
 -- f(z, c)
-type IterFunc = FractalPoint -> FractalPoint -> FractalPoint
+type IterFunc = Exp FractalPoint -> Exp FractalPoint -> Exp FractalPoint
 
-type Checker = FractalPoint -> Bool
+type Checker = Exp FractalPoint -> Exp Bool
 
 -- return n if diverges in n iterations, else -1
-calcDivergenceInPoint :: Int -> IterFunc -> Checker -> FractalPoint -> Int
-calcDivergenceInPoint iters func checker point = helper iters (flip func point) checker 0 0
-    where 
-        helper iters f checker point cur_iter | not (checker $ f point) = cur_iter
-                                              | cur_iter < iters = helper iters f checker (f point) (cur_iter + 1)
-                                              | otherwise = (-1)       
-
-calcDivergenceInPoints :: Int -> IterFunc -> Checker -> [FractalPoint] -> [Int]
-calcDivergenceInPoints iters f checker points = calcDivergenceInPoint iters f checker <$> points
+calcDivergenceInPoint :: Exp Int -> IterFunc -> Checker -> Exp FractalPoint -> Exp Int
+calcDivergenceInPoint iters func checker point = snd $ while (\zi -> snd zi < iters &&
+                                                               checker (fst zi))
+                                                       (\zi -> step point zi)
+                                                       (lift (point, constant 0))
+    where
+        step c (unlift -> (z, i)) = lift (func z c, i + constant 1)
