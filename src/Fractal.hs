@@ -7,7 +7,7 @@ import Divergence
 data Fractal = Fractal Int IterFunc Checker ColorFunc
 
 fractalColorInPoint :: Fractal -> FractalPoint -> FractalColor
-fractalColorInPoint (Fractal iters f c cf) point = colorDivergence cf $ 
+fractalColorInPoint (Fractal iters f c cf) point = colorDivergence cf iters $ 
                                                         (calcDivergenceInPoint iters f c) point
 
 fractalColorInPoints :: Fractal -> [FractalPoint] -> [FractalColor]
