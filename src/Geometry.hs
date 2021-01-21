@@ -2,15 +2,16 @@
 
 module Geometry where
 
-import Graphics.Gloss
-import Graphics.Gloss.Data.ViewPort
-import Graphics.Gloss.Data.ViewState
+import Graphics.Gloss as G
+import Graphics.Gloss.Data.ViewPort as G
+import Graphics.Gloss.Data.ViewState as G
 import Data.Array.Accelerate as A
 import Data.Array.Accelerate.Data.Complex as A
 import qualified Prelude as P
+import qualified GHC.Float as P
 import qualified Data.Complex as C
 
-type FractalPoint = Complex Float
+type FractalPoint = Complex Double
 
 -- TODO: phantom types
 
@@ -44,8 +45,8 @@ convertWorldToComplex :: Point -> FractalPoint
 convertWorldToComplex (x, y) = xComplex C.:+ yComplex
                                 where xRel = x P./ P.fst urWorldInit
                                       yRel = y P./ P.snd urWorldInit
-                                      xComplex = xRel P.* C.realPart urComplexInit 
-                                      yComplex = yRel P.* C.imagPart urComplexInit
+                                      xComplex = P.float2Double xRel P.* C.realPart urComplexInit 
+                                      yComplex = P.float2Double yRel P.* C.imagPart urComplexInit
 
 makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> Acc (A.Matrix FractalPoint)
 makeComplexGrid w h bl ur = use $ A.fromList (Z:.w :. h) $ do
