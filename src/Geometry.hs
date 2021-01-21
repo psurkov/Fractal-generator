@@ -49,7 +49,7 @@ convertWorldToComplex (x, y) = xComplex C.:+ yComplex
 
 makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> Acc (A.Matrix FractalPoint)
 makeComplexGrid w h bl ur = use $ A.fromList (Z:.w :. h) $ do
-    imag <- make1DComplexGrid h (C.imagPart bl) (C.imagPart ur)
+    imag <- P.reverse $ make1DComplexGrid h (C.imagPart bl) (C.imagPart ur)
     real <- make1DComplexGrid w (C.realPart bl) (C.realPart ur)
     P.return (real :+ imag)
         where 
