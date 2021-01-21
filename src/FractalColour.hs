@@ -31,13 +31,20 @@ standartGradient = gradient . use $ fromList (Z:.6) [(0, rgbInt 0 7 100),
                                                      (0.8575, rgbInt 0 2 0),
                                                      (1, rgbInt 0 7 100)]
 
+redGlow :: ColourFunc
+redGlow = gradient . use $ fromList (Z:.3) [(0, rgbInt 10 0 0), 
+                                            (0.7, rgbInt 220 0 0),
+                                            (1, rgbInt 220 100 0)]
+
 
 
 gradient :: Acc (A.Vector (Float, A.Colour)) -> ColourFunc
 gradient gradPoints n k = A.ifThenElse (k == constant (-1)) (rgb8 0 0 0) $ 
-                            linearInterpolateColour (A.fst p1, A.fst p2) (A.snd p1, A.snd p2) (A.fromIntegral k / A.fromIntegral n)
+                            linearInterpolateColour (A.fst p1, A.fst p2) (A.snd p1, A.snd p2) smoothPercent --((A.fromIntegral k / A.fromIntegral n) A.^ (constant 3 :: Exp Int))
                             where
-                                ind = while (\i -> (A.fst $ (gradPoints !! i)) * A.fromIntegral n < A.fromIntegral k)
+                                -- percent = A.fromIntegral k / A.fromIntegral n
+                                smoothPercent = (A.logBase 2 (1 + A.fromIntegral k)) / (A.logBase 2 (1 + A.fromIntegral n))
+                                ind = while (\i -> (A.fst $ (gradPoints !! i)) < smoothPercent)
                                         (\i -> i + constant 1)
                                         (constant 1)
                                 p1 = gradPoints !! (ind - constant 1)
