@@ -33,9 +33,9 @@ drawing :: Fractal -> Float -> (FractalPoint, FractalPoint) -> (Int, Int) -> Pic
 drawing fractal res (bl, ur) (width, height) = finalPic
                     where resW = floor $ fromIntegral width / res
                           resH = floor $ fromIntegral height / res
-                          frac = packColoursToByteString $ fractalColoursOnGrid fractal resW resH bl ur 
-                          resPic = bitmapOfByteString (fromIntegral resW) (fromIntegral resH) bitmapFormat frac False
-                          finalPic = scale res res resPic
+                          pic = packColoursToPicture $ fractalColoursOnGrid fractal resW resH bl ur 
+                          -- resPic = bitmapOfByteString (fromIntegral resW) (fromIntegral resH) bitmapFormat frac False
+                          finalPic = scale res res pic
 
 data World = World { worldPic :: Picture, 
                      worldViewState :: ViewState,

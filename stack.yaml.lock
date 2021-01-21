@@ -19,6 +19,20 @@ packages:
   original:
     hackage: colour-accelerate-0.4.0.0
 - completed:
+    hackage: linear-accelerate-0.7.0.0@sha256:096fba507820938405b0f70f6904f5844c73d8adb45f9b0a4d8680f4d3e98c69,2469
+    pantry-tree:
+      size: 1766
+      sha256: 2399c3608737e02b2252d80bbb4c8fe5129d220edebc1fa5a5307babb71a0995
+  original:
+    hackage: linear-accelerate-0.7.0.0
+- completed:
+    hackage: gloss-accelerate-2.1.0.0@sha256:918bbb7ef1729a8689b30b1670491d8d05f183dabf5d6f33774d61de5f79b845,1358
+    pantry-tree:
+      size: 379
+      sha256: 204919d7b3c35f3fb6d7f2d2dc2112275003ca1220bdac9d9cbf910159fb484d
+  original:
+    hackage: gloss-accelerate-2.1.0.0
+- completed:
     hackage: accelerate-llvm-1.3.0.0@sha256:06dc3779b3577ed41b2ddf2421452b566f290dce53df83d027938d41f2d5ec82,6054
     pantry-tree:
       size: 4685

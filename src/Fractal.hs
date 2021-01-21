@@ -15,8 +15,8 @@ fractalColourInPoint :: Fractal -> Exp FractalPoint -> Exp A.Colour
 fractalColourInPoint (Fractal iters f c cf) point = colorDivergence cf iters $ 
                                                         (calcDivergenceInPoint iters f c) point
 
-fractalColourInPoints :: Fractal -> Acc (Vector FractalPoint) -> Acc (Vector A.Colour)
+fractalColourInPoints :: Fractal -> Acc (Matrix FractalPoint) -> Acc (Matrix A.Colour)
 fractalColourInPoints f points = A.map (fractalColourInPoint f) points
 
-fractalColoursOnGrid :: Fractal -> Int -> Int -> FractalPoint -> FractalPoint -> Acc (Vector A.Colour)
+fractalColoursOnGrid :: Fractal -> Int -> Int -> FractalPoint -> FractalPoint -> Acc (Matrix A.Colour)
 fractalColoursOnGrid f w h bl ur = fractalColourInPoints f $ makeComplexGrid w h bl ur

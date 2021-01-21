@@ -4,9 +4,11 @@ module FractalColour where
 import Data.Word
 import qualified Data.ByteString as B
 
+import Graphics.Gloss as G
 import Data.Array.Accelerate as A
 import Data.Array.Accelerate.Data.Complex as A
 import Data.Array.Accelerate.Data.Colour.RGB as A
+import Graphics.Gloss.Accelerate.Data.Picture as A
 import qualified Prelude as P
 
 import Data.Array.Accelerate.LLVM.Native as CPU
@@ -35,9 +37,5 @@ colorDivergence = ($)
 -- packColoursToByteString = B.pack . P.concat . A.toList . CPU.run
 -- packColoursToByteString = B.pack . P.concat
 
-tt :: Vector A.Colour -> B.ByteString
-tt x = B.pack $ P.concat $ P.fmap helper (A.toList x)
-    where helper (RGB r g b) = P.fmap P.floor $ P.fmap (*255) [r, g, b, 1]
-
-packColoursToByteString :: Acc (Vector A.Colour) -> B.ByteString
-packColoursToByteString av = tt $ CPU.run av
+packColoursToPicture :: Acc (Matrix A.Colour) -> G.Picture
+packColoursToPicture av = bitmapOfArray (CPU.run $ A.map packRGB av) True
