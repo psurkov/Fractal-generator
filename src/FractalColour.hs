@@ -17,25 +17,41 @@ import Debug.Trace
 
 type ColourFunc = Exp Int -> Exp Int -> Exp A.Colour
 
+rgbInt :: Int -> Int -> Int -> Colour
+rgbInt r g b = RGB (P.fromIntegral r / 255) (P.fromIntegral g / 255) (P.fromIntegral b / 255)
+
 twoColours :: ColourFunc
 twoColours x y = A.ifThenElse (y == constant (-1)) (rgb8 100 0 0) (rgb8 0 100 0)
 
-redGradientColour :: ColourFunc
-redGradientColour = undefined
--- redGradientColour _ (-1) = [0, 0, 0, 255]
--- redGradientColour iters x = gradient 0 iters [0, 0, 0, 255] [200, 100, 100, 255] x
+standartGradient :: ColourFunc
+standartGradient = gradient . use $ fromList (Z:.6) [(0, rgbInt 0 7 100), 
+                                                     (0.16, rgbInt 32 107 203),
+                                                     (0.42, rgbInt 237 255 255),
+                                                     (0.6425, rgbInt 255 170 0),
+                                                     (0.8575, rgbInt 0 2 0),
+                                                     (1, rgbInt 0 7 100)]
 
-gradient :: Exp Int -> Exp Int -> Exp A.Colour -> Exp A.Colour -> Exp Int -> Exp A.Colour
-gradient = undefined
--- gradient l r a b x = zipWith (+) a $ fmap (\t -> fromIntegral $ round $ fromIntegral (fromIntegral t * x) / (fromIntegral (r-l))) $ zipWith (-) b a
+
+
+gradient :: Acc (A.Vector (Float, A.Colour)) -> ColourFunc
+gradient gradPoints n k = A.ifThenElse (k == constant (-1)) (rgb8 0 0 0) $ 
+                            linearInterpolateColour (A.fst p1, A.fst p2) (A.snd p1, A.snd p2) (A.fromIntegral k / A.fromIntegral n)
+                            where
+                                ind = while (\i -> (A.fst $ (gradPoints !! i)) * A.fromIntegral n < A.fromIntegral k)
+                                        (\i -> i + constant 1)
+                                        (constant 1)
+                                p1 = gradPoints !! (ind - constant 1)
+                                p2 = gradPoints !! ind
+                                linearInterpolateColour :: (Exp Float, Exp Float) -> (Exp A.Colour, Exp A.Colour) -> Exp Float -> Exp A.Colour
+                                linearInterpolateColour (x0, x1) (y0, y1) x = let
+                                                                                  RGB r0 g0 b0 = unlift y0 :: RGB (Exp Float)
+                                                                                  RGB r1 g1 b1 = unlift y1 :: RGB (Exp Float)
+                                                                              in rgb (linearInterpolate (x0, x1) (r0, r1) x) (linearInterpolate (x0, x1) (g0, g1) x) (linearInterpolate (x0, x1) (b0, b1) x)
+                                linearInterpolate (x0, x1) (y0, y1) x = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+
 
 colorDivergence :: ColourFunc -> Exp Int -> Exp Int -> Exp A.Colour
 colorDivergence = ($)
-
--- packColoursToByteString :: Acc (Vector A.Colour) -> B.ByteString
--- packColoursToByteString = undefined
--- packColoursToByteString = B.pack . P.concat . A.toList . CPU.run
--- packColoursToByteString = B.pack . P.concat
 
 packColoursToPicture :: Acc (Matrix A.Colour) -> G.Picture
 packColoursToPicture av = bitmapOfArray (CPU.run $ A.map packRGB av) True

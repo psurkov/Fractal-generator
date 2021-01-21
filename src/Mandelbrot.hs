@@ -10,4 +10,4 @@ import Divergence
 import FractalColour
 import Fractal
 
-mandelbrotFractal = Fractal 40 (\z c -> z*z + c) (\(unlift -> x :+ y) -> x * x + y * y <= 4) twoColours
+mandelbrotFractal = Fractal 40 (\z c -> z*z + c) (\(unlift -> x :+ y) -> x * x + y * y <= 4) standartGradient
