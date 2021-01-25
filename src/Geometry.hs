@@ -41,12 +41,12 @@ blComplexInit = (-1) :+ (-1)
 urComplexInit :: FractalPoint
 urComplexInit = (1) :+ (1)
 
-convertWorldToComplex :: Point -> FractalPoint
-convertWorldToComplex (x, y) = xComplex C.:+ yComplex
-                                where xRel = x P./ P.fst urWorldInit
-                                      yRel = y P./ P.snd urWorldInit
-                                      xComplex = P.float2Double xRel P.* C.realPart urComplexInit 
-                                      yComplex = P.float2Double yRel P.* C.imagPart urComplexInit
+convertWorldToComplex :: Point -> FractalPoint -> Point -> FractalPoint
+convertWorldToComplex w_ur c_ur (x, y) = xComplex C.:+ yComplex
+                                where xRel = x P./ P.fst w_ur
+                                      yRel = y P./ P.snd w_ur
+                                      xComplex = P.float2Double xRel P.* C.realPart c_ur
+                                      yComplex = P.float2Double yRel P.* C.imagPart c_ur
 
 makeComplexGrid :: Int -> Int -> FractalPoint -> FractalPoint -> Acc (A.Matrix FractalPoint)
 makeComplexGrid w h bl ur = use $ A.fromList (Z:.h :. w) $ do
