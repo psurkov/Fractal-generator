@@ -10,4 +10,4 @@ import Divergence
 import FractalColour
 import Fractal
 
-mandelbrotFractal = Fractal 1000 (\z c -> z*z + c) (\(unlift -> x :+ y) -> x * x + y * y <= 4) redGlow
+mandelbrotFractal = Fractal 1000 (\z c -> z*z + c) (\(unlift -> x :+ y) -> x * x + y * y <= 4) standartGradient

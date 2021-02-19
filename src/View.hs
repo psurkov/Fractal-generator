@@ -102,10 +102,10 @@ zoom dt world = world'
               where pos = mousePosition $ viewSettings world
                     screenSize = worldScreenSize $ viewSettings world
                     speed = zoomSpeed $ viewSettings world
---                    w_bl = blWorldByWidthHeight screenSize
+                    w_bl = blWorldByWidthHeight screenSize
                     w_ur = urWorldByWidthHeight screenSize
                     (bl, ur) = c_blur world
-                    c_click = traces $ convertWorldToComplex w_ur ur $ mousePosition $ viewSettings world
+                    c_click = traces $ convertWorldToComplex w_bl bl $ mousePosition $ viewSettings world
                     c_size = (ur - bl) / realToFrac 2
                     ur_ideal = c_click + c_size * realToFrac (1 / (1 + speed))
                     bl_ideal = c_click - c_size * realToFrac (1 / (1 + speed))
@@ -180,4 +180,4 @@ timeHandler dt world = worldRedrawn
 --                                                       $ pic
 
 viewMain :: IO ()
-viewMain = play window background 60 initWorld worldPic eventHandler timeHandler
+viewMain = play window background 30 initWorld worldPic eventHandler timeHandler

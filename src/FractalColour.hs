@@ -24,7 +24,7 @@ twoColours :: ColourFunc
 twoColours x y = A.ifThenElse (y == constant (-1)) (rgb8 100 0 0) (rgb8 0 100 0)
 
 standartGradient :: ColourFunc
-standartGradient = gradient . use $ fromList (Z:.6) [(0, rgbInt 0 7 100), 
+standartGradient = gradient (constant 0.5) . use $ fromList (Z:.6) [(0, rgbInt 0 7 100), 
                                                      (0.16, rgbInt 32 107 203),
                                                      (0.42, rgbInt 237 255 255),
                                                      (0.6425, rgbInt 255 170 0),
@@ -32,19 +32,22 @@ standartGradient = gradient . use $ fromList (Z:.6) [(0, rgbInt 0 7 100),
                                                      (1, rgbInt 0 7 100)]
 
 redGlow :: ColourFunc
-redGlow = gradient . use $ fromList (Z:.3) [(0, rgbInt 10 0 0), 
+redGlow = gradient (constant 1.0) . use $ fromList (Z:.3) [(0, rgbInt 10 0 0), 
                                             (0.7, rgbInt 220 0 0),
                                             (1, rgbInt 220 100 0)]
 
 
 
-gradient :: Acc (A.Vector (Float, A.Colour)) -> ColourFunc
-gradient gradPoints n k = A.ifThenElse (k == constant (-1)) (rgb8 0 0 0) $ 
-                            linearInterpolateColour (A.fst p1, A.fst p2) (A.snd p1, A.snd p2) smoothPercent --((A.fromIntegral k / A.fromIntegral n) A.^ (constant 3 :: Exp Int))
+gradient :: Exp Float -> Acc (A.Vector (Float, A.Colour)) -> ColourFunc
+gradient recursiveFactor gradPoints n k = A.ifThenElse (k == constant (-1)) (rgb8 0 0 0) $ 
+                            linearInterpolateColour (A.fst p1, A.fst p2) (A.snd p1, A.snd p2) smoothPercentRec --((A.fromIntegral k / A.fromIntegral n) A.^ (constant 3 :: Exp Int))
                             where
                                 -- percent = A.fromIntegral k / A.fromIntegral n
                                 smoothPercent = (A.logBase 2 (1 + A.fromIntegral k)) / (A.logBase 2 (1 + A.fromIntegral n))
-                                ind = while (\i -> (A.fst $ (gradPoints !! i)) < smoothPercent)
+                                smoothPercentRec = fst $ while (\(unlift->(i, rf)) -> i > rf && rf > constant 0.01)
+                                        (\p -> lift (fst p - snd p, snd p * (1 - snd p)))
+                                        (lift (smoothPercent, recursiveFactor))
+                                ind = while (\i -> (A.fst $ (gradPoints !! i)) < smoothPercentRec)
                                         (\i -> i + constant 1)
                                         (constant 1)
                                 p1 = gradPoints !! (ind - constant 1)
